@@ -1,4 +1,10 @@
-import cv2, numpy as np, tensorflow as tf
+import os
+# Force TensorFlow to use CPU and quiet logs to avoid CUDA errors on systems without GPU drivers
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+import cv2, numpy as np
+import tensorflow as tf
 import time
 
 model = tf.keras.models.load_model('digit_model.h5')
@@ -12,6 +18,7 @@ last_prediction_time = 0
 prediction_interval = 0.2  # Predict every 200ms instead of every frame
 cached_result = ("", 0.0)
 cached_processed_roi = None
+last_printed_result = None
 
 while True:
     ok, frame = cap.read()
@@ -106,6 +113,10 @@ while True:
     
     # Use cached results for display
     number_str, avg_conf = cached_result
+    # Print to console only when result changes
+    if last_printed_result != cached_result:
+        print(f"Recognized: {number_str} (avg_conf={avg_conf:.2f})")
+        last_printed_result = cached_result
 
     # UI
     cv2.rectangle(frame, (x1,y1), (x2,y2), (0,255,0), 2)
